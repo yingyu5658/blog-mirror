@@ -2,19 +2,27 @@ name: Mirror from GlowIsle
 
 on:
   schedule:
-    - cron: '*/30 * * * *'  # 每30分钟运行一次
-  workflow_dispatch:  # 手动触发
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
 
 jobs:
   mirror:
     runs-on: ubuntu-latest
     steps:
-      - name: Clone from self-hosted instance
+      - name: Setup SSH key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      
+      - name: Add GitHub to known hosts
+        run: ssh-keyscan github.com >> ~/.ssh/known_hosts
+      
+      - name: Clone from GlowIsle
         run: |
           git clone --mirror https://git.verdant.ee/blog.git temp-repo
-          cd temp-repo
           
-      - name: Push to GitHub
+      - name: Push to GitHub via SSH
         run: |
           cd temp-repo
-          git push --mirror https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+          git remote set-url origin git@github.com:yingyu5658/blog-mirror.git
+          git push --mirror
