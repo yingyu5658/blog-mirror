@@ -1,0 +1,20 @@
+name: Mirror from GlowIsle
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'  # 每30分钟运行一次
+  workflow_dispatch:  # 手动触发
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone from self-hosted instance
+        run: |
+          git clone --mirror https://git.verdant.ee/blog.git temp-repo
+          cd temp-repo
+          
+      - name: Push to GitHub
+        run: |
+          cd temp-repo
+          git push --mirror https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
